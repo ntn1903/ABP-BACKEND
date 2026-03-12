@@ -1,6 +1,5 @@
 using Acme.BookStore.EntityFrameworkCore;
 using Acme.BookStore.MultiTenancy;
-using Autofac.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
@@ -13,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.RateLimiting;
 using Volo.Abp;
 using Volo.Abp.Account;
 using Volo.Abp.Account.Web;
@@ -26,7 +24,6 @@ using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
 using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
-using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
 using Volo.Abp.Security.Claims;
@@ -45,8 +42,7 @@ namespace Acme.BookStore;
     typeof(AbpAspNetCoreMvcUiLeptonXLiteThemeModule),
     typeof(AbpAccountWebOpenIddictModule),
     typeof(AbpAspNetCoreSerilogModule),
-    typeof(AbpSwashbuckleModule),
-    typeof(AbpBackgroundJobsModule)
+    typeof(AbpSwashbuckleModule)
 )]
 public class BookStoreHttpApiHostModule : AbpModule
 {
@@ -75,22 +71,6 @@ public class BookStoreHttpApiHostModule : AbpModule
         ConfigureVirtualFileSystem(context);
         ConfigureCors(context, configuration);
         ConfigureSwaggerServices(context, configuration);
-
-
-        context.Services.AddSingleton<ConcurrencyLimiter>(sp =>
-        {
-            return new ConcurrencyLimiter(new ConcurrencyLimiterOptions
-            {
-                PermitLimit = 0,                  // tối đa 5 job đồng thời
-                QueueLimit = 0,                 // xếp hàng tối đa 100 job chờ
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
-            });
-        });
-
-        Configure<AbpBackgroundJobWorkerOptions>(options =>
-        {
-            options.DefaultTimeout = 864000; //10 days (as seconds)
-        });
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -128,8 +108,8 @@ public class BookStoreHttpApiHostModule : AbpModule
             options.Applications["MVC"].RootUrl = configuration["App:SelfUrl"];
             options.RedirectAllowedUrls.AddRange(configuration["App:RedirectAllowedUrls"]?.Split(',') ?? Array.Empty<string>());
 
-            //options.Applications["Angular"].RootUrl = configuration["App:ClientUrl"];
-            //options.Applications["Angular"].Urls[AccountUrlNames.PasswordReset] = "account/reset-password";
+            options.Applications["Angular"].RootUrl = configuration["App:ClientUrl"];
+            options.Applications["Angular"].Urls[AccountUrlNames.PasswordReset] = "account/reset-password";
         });
     }
 
