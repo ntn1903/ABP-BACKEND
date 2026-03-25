@@ -1,4 +1,5 @@
 using Acme.BookStore.Books.Dtos;
+using Acme.BookStore.Configurations.Dtos;
 using Acme.BookStore.Entities;
 using Riok.Mapperly.Abstractions;
 using Volo.Abp.Mapperly;
@@ -26,4 +27,13 @@ public partial class CreateUpdateBookDtoToBookMapper : MapperBase<CreateUpdateBo
     public override partial Book Map(CreateUpdateBookDto source);
 
     public override partial void Map(CreateUpdateBookDto source, Book destination);
+}
+
+// Configuration
+[Mapper]
+public partial class ConfigurationToConfigurationDtoMapper : MapperBase<Configuration, ConfigurationDto>
+{
+    public override partial ConfigurationDto Map(Configuration source);
+
+    public override partial void Map(Configuration source, ConfigurationDto destination);
 }

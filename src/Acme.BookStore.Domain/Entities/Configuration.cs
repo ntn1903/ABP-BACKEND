@@ -10,7 +10,7 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace Acme.BookStore.Entities
 {
     [Index(nameof(Key), IsUnique = true)]
-    public class Configuration : FullAuditedEntity<Guid>
+    public class Configuration : AuditedEntity<Guid>
     {
         [Required]
         public string Key { get; set; }
