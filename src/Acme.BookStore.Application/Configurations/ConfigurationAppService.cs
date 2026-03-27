@@ -1,5 +1,8 @@
-﻿using Acme.BookStore.Configurations.Dtos;
+﻿using Acme.BookStore.BackgroundJobs.LogApiJobs;
+using Acme.BookStore.Configurations.Dtos;
 using Acme.BookStore.Entities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Swashbuckle.AspNetCore.Annotations;
@@ -12,7 +15,9 @@ using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
+using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Caching;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 
 namespace Acme.BookStore.Configurations
@@ -22,6 +27,13 @@ namespace Acme.BookStore.Configurations
         public virtual string EnvironmentName => Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.ToLower()?.Trim();
         public IRepository<Configuration, Guid> _configurationRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<Configuration, Guid>>();
         public IDistributedCache<ConfigurationCacheItem> _configurationCache => LazyServiceProvider.LazyGetRequiredService<IDistributedCache<ConfigurationCacheItem>>();
+        public IBackgroundJobManager _backgroundJobManager => LazyServiceProvider.LazyGetRequiredService<IBackgroundJobManager>();
+        public IHttpContextAccessor _httpContextAccessor;
+
+        public ConfigurationAppService(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
 
         public async Task<PagedResultDto<ConfigurationDto>> GetListAsync(GetConfigurationInput input)
         {
@@ -32,8 +44,10 @@ namespace Acme.BookStore.Configurations
             return new PagedResultDto<ConfigurationDto>(totalCnt, items);
         }
 
-        public async Task<ConfigurationDto> GetAsync([SwaggerParameter(Description = "Id is key")] string id)
+        public async Task<ConfigurationDto> GetAsync([SwaggerParameter(Description = "Key")] string id)
         {
+            await _backgroundJobManager.EnqueueAsync(new LogApiJobArgs { Url = $"{GetApiInfo().Url}", Method = GetApiInfo().Method });
+
             var data = await _configurationCache.GetOrAddAsync(GenerateCacheKey(id),
                 async () =>
                 {
@@ -84,6 +98,14 @@ namespace Acme.BookStore.Configurations
         public async Task RemoveCacheAsync(string key)
         {
             await _configurationCache.RemoveAsync(GenerateCacheKey(key));
+        }
+
+        protected ApiInfo GetApiInfo()
+        {
+            string method = _httpContextAccessor.HttpContext?.Request?.Method;
+            string url = _httpContextAccessor.HttpContext?.Request?.GetDisplayUrl();
+
+            return new ApiInfo() { Method = method, Url = url };
         }
     }
 }
