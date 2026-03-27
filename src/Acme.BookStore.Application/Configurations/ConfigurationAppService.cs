@@ -1,23 +1,20 @@
 ﻿using Acme.BookStore.BackgroundJobs.LogApiJobs;
 using Acme.BookStore.Configurations.Dtos;
 using Acme.BookStore.Entities;
+using Acme.BookStore.Excels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Swashbuckle.AspNetCore.Annotations;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Caching;
-using Volo.Abp.Domain.Entities;
+using Volo.Abp.Content;
 using Volo.Abp.Domain.Repositories;
 
 namespace Acme.BookStore.Configurations
@@ -29,6 +26,7 @@ namespace Acme.BookStore.Configurations
         public IDistributedCache<ConfigurationCacheItem> _configurationCache => LazyServiceProvider.LazyGetRequiredService<IDistributedCache<ConfigurationCacheItem>>();
         public IBackgroundJobManager _backgroundJobManager => LazyServiceProvider.LazyGetRequiredService<IBackgroundJobManager>();
         public IHttpContextAccessor _httpContextAccessor;
+        public ExcelAppService _excelAppService => LazyServiceProvider.LazyGetRequiredService<ExcelAppService>();
 
         public ConfigurationAppService(IHttpContextAccessor httpContextAccessor)
         {
@@ -106,6 +104,14 @@ namespace Acme.BookStore.Configurations
             string url = _httpContextAccessor.HttpContext?.Request?.GetDisplayUrl();
 
             return new ApiInfo() { Method = method, Url = url };
+        }
+
+        public async Task<IRemoteStreamContent> ExportExcelAsync()
+        {
+            var data = await _configurationRepository.GetListAsync();
+            string fileName = $"Configuration";
+
+            return await _excelAppService.ExportExcelAsync(data, fileName);
         }
     }
 }
