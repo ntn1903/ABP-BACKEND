@@ -1,17 +1,12 @@
 ﻿using Acme.BookStore.Common;
 using Acme.BookStore.Constants;
-using Microsoft.AspNetCore.Mvc;
-using NPOI.SS.Formula.Functions;
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
-using Org.BouncyCastle.Utilities;
-using System;
+using OfficeOpenXml.Style;
 using System.Collections.Generic;
-using System.Data;
+using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using Volo.Abp.Content;
 using Volo.Abp.DependencyInjection;
@@ -45,6 +40,13 @@ namespace Acme.BookStore.Excels
                     var header = displayAttr?.DisplayName ?? prop.Name;
 
                     sheet.Cells[1, col + 1].Value = header;
+                    sheet.Cells[1, col + 1].Style.Font.Bold = true;
+                    sheet.Cells[1, col + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    sheet.Cells[1, col + 1].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+
+                    sheet.Cells[1, col + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    sheet.Cells[1, col + 1].Style.Fill.BackgroundColor.SetColor(Color.DarkRed);
+                    sheet.Cells[1, col + 1].Style.Font.Color.SetColor(Color.White);
                 }
 
                 // 👉 Data
@@ -57,7 +59,24 @@ namespace Acme.BookStore.Excels
                     }
                 }
 
+                for (int row = 1; row <= sheet.Dimension.End.Row; row++)
+                {
+                    if (sheet.Cells[row, 1, row, sheet.Dimension.End.Column]
+                        .Any(c => !string.IsNullOrWhiteSpace(c.Text)))
+                    {
+                        foreach (var cell in sheet.Cells[row, 1, row, sheet.Dimension.End.Column])
+                        {
+                            cell.Style.Border.Top.Style =
+                            cell.Style.Border.Bottom.Style =
+                            cell.Style.Border.Left.Style =
+                            cell.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                        }
+                    }
+                }
+
                 sheet.Cells.AutoFitColumns();
+
+                sheet.Cells.Style.Numberformat.Format = "dd/MM/yyyy";
 
                 return package.GetAsByteArray();
             }

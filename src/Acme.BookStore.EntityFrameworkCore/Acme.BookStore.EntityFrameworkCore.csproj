@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Acme.BookStore.Domain\Acme.BookStore.Domain.csproj" />
+    <PackageReference Include="Scriban" Version="7.0.0" />
     <PackageReference Include="Volo.Abp.EntityFrameworkCore.PostgreSql" Version="10.1.1" />
     <PackageReference Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" Version="10.1.1" />
     <PackageReference Include="Volo.Abp.SettingManagement.EntityFrameworkCore" Version="10.1.1" />
@@ -27,5 +28,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
+	<PropertyGroup>
+		<NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
+	</PropertyGroup>
+
+
+	<PropertyGroup>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
 
 </Project>
