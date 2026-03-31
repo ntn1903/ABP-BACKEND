@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -77,6 +78,21 @@ public class BookStoreHttpApiHostModule : AbpModule
         {
             options.IsJobExecutionEnabled = true;
         });
+
+        //context.Services.AddStackExchangeRedisCache(options =>
+        //{
+        //    options.ConfigurationOptions = new ConfigurationOptions
+        //    {
+        //        EndPoints =
+        //        {
+        //            "redis-13590.c232.us-east-1-2.ec2.cloud.redislabs.com:13590"
+        //        },
+        //        User = "default",
+        //        Password = "nguyen1997", // 🔥 bắt buộc đúng
+        //        Ssl = true,                     // 🔥 bắt buộc
+        //        AbortOnConnectFail = false
+        //    };
+        //});
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)

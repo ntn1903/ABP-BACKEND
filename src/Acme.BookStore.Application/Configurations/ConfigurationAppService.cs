@@ -5,6 +5,7 @@ using Acme.BookStore.Excels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Linq;
@@ -24,6 +25,7 @@ namespace Acme.BookStore.Configurations
         public virtual string EnvironmentName => Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.ToLower()?.Trim();
         public IRepository<Configuration, Guid> _configurationRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<Configuration, Guid>>();
         public IDistributedCache<ConfigurationCacheItem> _configurationCache => LazyServiceProvider.LazyGetRequiredService<IDistributedCache<ConfigurationCacheItem>>();
+        public IDistributedCache distributedCache => LazyServiceProvider.LazyGetRequiredService<IDistributedCache>();
         public IBackgroundJobManager _backgroundJobManager => LazyServiceProvider.LazyGetRequiredService<IBackgroundJobManager>();
         public IHttpContextAccessor _httpContextAccessor;
         public ExcelAppService _excelAppService => LazyServiceProvider.LazyGetRequiredService<ExcelAppService>();
@@ -112,6 +114,20 @@ namespace Acme.BookStore.Configurations
             string fileName = $"Configuration";
 
             return await _excelAppService.ExportExcelAsync(data, fileName);
+        }
+
+        public async Task<string> GetTessssss(string key)
+        {
+
+            var mux = await ConnectionMultiplexer.ConnectAsync("redis-17945.c321.us-east-1-2.ec2.cloud.redislabs.com:17945,password=X1E1O26NrYewv6JnNJayVUhoizuILmHM,ssl=True,abortConnect=False");
+
+            var xxxx = mux.IsConnected;
+            var xxxxa = mux.IsConnecting;
+
+            var db = mux.GetDatabase();
+
+            var value = await db.StringGetAsync(key);
+            return value;
         }
     }
 }
