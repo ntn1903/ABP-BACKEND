@@ -5,12 +5,13 @@ using Acme.BookStore.Excels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Caching.Distributed;
-using StackExchange.Redis;
 using Swashbuckle.AspNetCore.Annotations;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.BackgroundJobs;
@@ -22,7 +23,7 @@ namespace Acme.BookStore.Configurations
 {
     public class ConfigurationAppService : ApplicationService, IConfigureAppService
     {
-        public virtual string EnvironmentName => Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.ToLower()?.Trim();
+        public virtual string EnvironmentName => Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.ToCamelCase()?.Trim();
         public IRepository<Configuration, Guid> _configurationRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<Configuration, Guid>>();
         public IDistributedCache<ConfigurationCacheItem> _configurationCache => LazyServiceProvider.LazyGetRequiredService<IDistributedCache<ConfigurationCacheItem>>();
         public IDistributedCache distributedCache => LazyServiceProvider.LazyGetRequiredService<IDistributedCache>();
@@ -116,18 +117,14 @@ namespace Acme.BookStore.Configurations
             return await _excelAppService.ExportExcelAsync(data, fileName);
         }
 
-        public async Task<string> GetTessssss(string key)
+        public async Task ImportExcelAsync(IFormFile file)
         {
+            var excelFile = await _excelAppService.ReadExcelAsync(file);
+            var expectedHeaders = new List<string> { "Name", "Email", "Age", "Role" };
 
-            var mux = await ConnectionMultiplexer.ConnectAsync("redis-17945.c321.us-east-1-2.ec2.cloud.redislabs.com:17945,password=X1E1O26NrYewv6JnNJayVUhoizuILmHM,ssl=True,abortConnect=False");
+            var isHeaderValid = expectedHeaders.SequenceEqual(excelFile.Headers);
 
-            var xxxx = mux.IsConnected;
-            var xxxxa = mux.IsConnecting;
-
-            var db = mux.GetDatabase();
-
-            var value = await db.StringGetAsync(key);
-            return value;
+            if (!isHeaderValid) throw new UserFriendlyException("INVALID_FILE", "FILE_002", "File không đúng template");
         }
     }
 }

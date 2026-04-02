@@ -224,7 +224,16 @@ public class BookStoreHttpApiHostModule : AbpModule
         app.UseCorrelationId();
         app.MapAbpStaticAssets();
         app.UseRouting();
-        app.UseCors();
+
+        app.UseCors(x => x
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials()
+                .SetIsOriginAllowed(origin => true)
+                //.WithOrigins("https://localhost:4200")
+                );
+
+
         app.UseAuthentication();
         app.UseAbpOpenIddictValidation();
 

@@ -1,13 +1,16 @@
 ﻿using Acme.BookStore.Common;
 using Acme.BookStore.Constants;
+using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Volo.Abp;
 using Volo.Abp.Content;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Timing;
@@ -23,6 +26,7 @@ namespace Acme.BookStore.Excels
             _clock = clock;
         }
 
+        // Export
         private byte[] ExportToByte<T>(List<T> data)
         {
             using (var package = new ExcelPackage())
@@ -89,5 +93,72 @@ namespace Acme.BookStore.Excels
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             return new RemoteStreamContent(new MemoryStream(ExportToByte(data)), SetFileName(fileName), ContentTypeConstants.Excel);
         }
+
+        // Import
+        public bool IsExcelContentType(IFormFile file)
+        {
+            //var allowedExtensions = new[] { ".xlsx", ".xls" };
+            //var extension = Path.GetExtension(file.FileName).ToLower();
+
+            //return allowedExtensions.Contains(extension);
+
+            var allowedTypes = new[]
+            {
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+                "application/vnd.ms-excel" // .xls
+            };
+
+            return allowedTypes.Contains(file.ContentType);
+        }
+
+        public async Task<ExcelFileContent> ReadExcelAsync(IFormFile file)
+        {
+            if (!IsExcelContentType(file))
+                throw new UserFriendlyException("INVALID_FILE", "FILE_001", "File không đúng định dạng");
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+
+            using var package = new ExcelPackage(stream);
+            var sheet = package.Workbook.Worksheets[0];
+
+            List<List<string>> dataRows = new List<List<string>>();
+
+            int colCount = sheet.Dimension.Columns;
+            int rowCount = sheet.Dimension.Rows;
+
+            // Read header
+            var headers = new List<string>();
+            for (int col = 1; col <= colCount; col++)
+            {
+                headers.Add(sheet.Cells[1, col].Text.Trim());
+            }
+
+            // Read data, ignore header
+            for (int row = 2; row <= rowCount; row++)
+            {
+                var rowData = new List<string>();
+
+                for (int col = 1; col <= colCount; col++)
+                {
+                    var key = headers[col - 1];
+                    var value = sheet.Cells[row, col].Text;
+
+                    rowData.Add(sheet.Cells[row, col].Text);
+                }
+
+                dataRows.Add(rowData);
+            }
+
+            return new ExcelFileContent { Headers = headers, DataRows = dataRows };
+        }
     }
+}
+
+public class ExcelFileContent
+{
+    public List<string> Headers { get; set; }
+    public List<List<string>> DataRows { get; set; }
 }
