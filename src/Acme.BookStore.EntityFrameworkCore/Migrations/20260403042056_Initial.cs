@@ -34,6 +34,24 @@ namespace Acme.BookStore.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "___Configurations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Key = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: true),
+                    IsEnable = table.Column<bool>(type: "boolean", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    CreatorId = table.Column<Guid>(type: "uuid", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    LastModifierId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK____Configurations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AbpAuditLogExcelFiles",
                 columns: table => new
                 {
@@ -457,6 +475,7 @@ namespace Acme.BookStore.Migrations
                     EntityVersion = table.Column<int>(type: "integer", nullable: false),
                     LastPasswordChangeTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     LastSignInTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    Leaved = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     ExtraProperties = table.Column<string>(type: "text", nullable: false),
                     ConcurrencyStamp = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
                     CreationTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
@@ -572,7 +591,7 @@ namespace Acme.BookStore.Migrations
                     ChangeType = table.Column<byte>(type: "smallint", nullable: false),
                     EntityTenantId = table.Column<Guid>(type: "uuid", nullable: true),
                     EntityId = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
-                    EntityTypeFullName = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    EntityTypeFullName = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
                     ExtraProperties = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -843,7 +862,7 @@ namespace Acme.BookStore.Migrations
                     NewValue = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
                     OriginalValue = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
                     PropertyName = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    PropertyTypeFullName = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false)
+                    PropertyTypeFullName = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -889,6 +908,12 @@ namespace Acme.BookStore.Migrations
                         principalTable: "OpenIddictAuthorizations",
                         principalColumn: "Id");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX____Configurations_Key",
+                table: "___Configurations",
+                column: "Key",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_AbpAuditLogActions_AuditLogId",
@@ -1151,6 +1176,9 @@ namespace Acme.BookStore.Migrations
         {
             migrationBuilder.DropTable(
                 name: "___Books");
+
+            migrationBuilder.DropTable(
+                name: "___Configurations");
 
             migrationBuilder.DropTable(
                 name: "AbpAuditLogActions");
